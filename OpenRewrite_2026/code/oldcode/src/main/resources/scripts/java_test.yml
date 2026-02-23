@@ -1,0 +1,8 @@
+type: specs.openrewrite.org/v1beta/recipe
+name: com.alvant.rewrite
+displayName: Rename getAlvant() to getItSolutions
+description: Rename method getAlvant() to getItSolutions in OldcodeApplication
+recipeList:
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: "com.alvant.oldcode.OldcodeApplication getAlvant(..)"
+      newMethodName: "getCCItSolutions"

@@ -10,7 +10,11 @@ public class OldcodeApplication {
 
         SpringApplication.run(OldcodeApplication.class, args);
 
-        System.out.println("Hello world! Hello Alvant!");
+        System.out.println("Hello world! Hello " + getAlvant());
+    }
+
+    public static String getAlvant() {
+        return "Everybody!";
     }
 
 }
