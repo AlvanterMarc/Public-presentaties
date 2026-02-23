@@ -1,0 +1,9 @@
+type: specs.openrewrite.org/v1beta/recipe
+name: com.alvant.rewrite
+displayName: Change project dependencies from com.alvant
+description: Change Maven dependency groupId from com.alvant to com.ccitsolutions
+recipeList:
+  - org.openrewrite.maven.ChangeDependencyScope:
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-test
+      newScope: provided
