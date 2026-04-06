@@ -116,6 +116,9 @@ void move_backward() {
 }
 
 void turn_left() {
+  if (DEBUG) {
+    Serial.print(" | turning left");
+  }
   digitalWrite(motor_L_IN1, 0);
   digitalWrite(motor_L_IN2, 1);
   analogWrite(motor_L_ENA, MAX_SPEED);
@@ -126,6 +129,9 @@ void turn_left() {
 }
 
 void turn_right() {
+  if (DEBUG) {
+    Serial.print(" | turning right");
+  }
   digitalWrite(motor_L_IN1, 1);
   digitalWrite(motor_L_IN2, 0);
   analogWrite(motor_L_ENA, MAX_SPEED);
