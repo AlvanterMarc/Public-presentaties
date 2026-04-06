@@ -1,5 +1,7 @@
 #include <Servo.h>  // servo library
 
+#define DEBUG  true
+
 #define MAX_SPEED  210
 #define MIN_SPEED  140
 
@@ -58,6 +60,10 @@ void setup_motors() {
 //
 
 void move_stop() {
+  if (DEBUG) {
+    Serial.print(" | stop!");
+  }
+
   digitalWrite(motor_L_ENA, 0); // Left motor braking
   digitalWrite(motor_L_IN1, 0);
   digitalWrite(motor_L_IN2, 0);
@@ -68,6 +74,9 @@ void move_stop() {
 }
 
 void _move_forward(int speed_left, int speed_right) {
+  if (DEBUG) {
+    Serial.print(" | moving forward");
+  }
   analogWrite(motor_L_ENA, speed_left); // Left motor forward
   digitalWrite(motor_L_IN1, 1);
   digitalWrite(motor_L_IN2, 0);
@@ -78,7 +87,7 @@ void _move_forward(int speed_left, int speed_right) {
 }
 
 void move_forward() {
-  _move_forward(MAX_SPEED, MAX_SPEED);
+  _move_forward(MIN_SPEED, MIN_SPEED);
 }
 
 void move_forward_left() {
@@ -90,6 +99,9 @@ void move_forward_right() {
 }
 
 void _move_backward(int speed_left, int speed_right) {
+  if (DEBUG) {
+    Serial.print(" | moving backward");
+  }
   analogWrite(motor_L_ENA, speed_left); // Left motor backward
   digitalWrite(motor_L_IN1, 0);
   digitalWrite(motor_L_IN2, 1);
@@ -146,11 +158,12 @@ int calculate_distance() {
   digitalWrite(Trig, HIGH);  
   delayMicroseconds(20);
   digitalWrite(Trig, LOW);   
-  float distance = pulseIn(Echo, HIGH)/58;
-  _distance_sensor = distance;
-  // Serial.print("distance = ");
-  // Serial.println(Fdistance);
-  return (distance);
+  _distance_sensor = pulseIn(Echo, HIGH)/58;
+  if (DEBUG == true) {
+    Serial.print(" | distance = ");
+    Serial.print(_distance_sensor);
+  }
+  return (_distance_sensor);
 }
 
 //
@@ -182,6 +195,13 @@ bool detect_infrared() {
   _infrared_sensor_left = _read_infrared(infrared_L);
   _infrared_sensor_mid = _read_infrared(infrared_M);
   _infrared_sensor_right = _read_infrared(infrared_R);
+
+  if (DEBUG == true) {
+    Serial.print(" | infrared L, M, R: ");
+    Serial.print(_infrared_sensor_left ? "true , " : "false, ");
+    Serial.print(_infrared_sensor_mid ? "true , " : "false, ");
+    Serial.print(_infrared_sensor_right ? "true" : "false");
+  }
   
   bool any_sensor = _infrared_sensor_left || _infrared_sensor_mid || _infrared_sensor_right;
   return any_sensor;

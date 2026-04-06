@@ -16,9 +16,16 @@ int koppie_links_rechts = 1; // links = -1 (neg) / rechts = 1 (pos)
 int koppie_links_bound = 90 - 10;
 int koppie_rechts_bound = 90 + 10;
 
-int linker_muur_gezien = 0;
-
 #define MIN_DISTANCE  15
+
+typedef enum { NOTHING, TOO_CLOSE } danger_states;
+
+danger_states danger_state = NOTHING;
+
+typedef enum { STOP, FORWARD, BACKWARD, LEFT, RIGHT } move_states;
+
+int move_stack_latest;
+move_states move_stack[10];
 
 void setup() {
   Serial.begin(9600);
@@ -30,6 +37,7 @@ void setup() {
   setup_infrared_sensor();
   setup_motors();
 
+  clear_stack();
   turn_distance_sensor_to(servo_distance_sensor, koppie_graden);
   move_stop();
 }
@@ -43,78 +51,94 @@ void calculate_koppie() {
   }
 }
 
+move_states pop_stack() {
+  move_states state = move_stack[move_stack_latest];
+  move_stack_latest--;
+  return state;
+}
+
+void push_stack(move_states move_state) {
+  move_stack_latest++;
+  move_stack[move_stack_latest] = move_state;
+}
+
+void clear_stack() {
+  move_stack_latest = -1;
+}
+
+bool is_stack_empty() {
+  return move_stack_latest == -1;
+}
+
+danger_states update_danger_state() {
+  if (DEBUG) {
+    Serial.print(" | danger_state: ");
+    Serial.print(danger_state);
+  }
+
+  if (get_distance() < MIN_DISTANCE) {
+    return TOO_CLOSE;
+  }
+
+  return NOTHING;
+}
+
+void update_moves(danger_states danger_state) {
+  switch (danger_state) {
+    case TOO_CLOSE:
+      clear_stack();
+      push_stack(BACKWARD);
+      push_stack(STOP);
+      break;
+    case NOTHING:
+    default:
+      if (is_stack_empty()) {
+        push_stack(FORWARD);
+        push_stack(STOP);
+      }
+  }
+
+  if (DEBUG) {
+    Serial.print(" | move_stack_latest: ");
+    Serial.print(move_stack_latest);
+    Serial.print(" | move stack:");
+    for (int i=0; i <= move_stack_latest; i++) {
+      Serial.print(" ");
+      Serial.print(move_stack[i]);
+    }
+  }
+
+}
+
+void do_movement() {
+  move_states move_state = pop_stack();
+
+  switch (move_state) {
+    case STOP:
+      move_stop();
+      break;
+    case FORWARD:
+      move_forward();
+      break;
+    case BACKWARD:
+      move_backward();
+      break;
+  }
+
+  if (DEBUG) {
+    Serial.println();
+  }
+
+}
+
 void loop() {
 
-  calculate_koppie();
-  //beweeg_koppie(koppie_graden);
-  int distance = calculate_distance();
-  bool koppie_ok = distance > MIN_DISTANCE;
+  calculate_distance();
+  detect_infrared();
 
-  bool pootjes_ok = !detect_infrared();
+  danger_state = update_danger_state();
+  update_moves(danger_state);
+  do_movement();
 
-  if (koppie_ok && pootjes_ok) {
-    //kat_stop();
-    // delay(10);
-    // kat_forward_left();
-    move_forward();
-  }
-
-  if (!koppie_ok) {
-    move_stop();
-    delay(20);
-    move_backward();
-    delay(200);
-    turn_left();
-    delay(200);
-  }
-
-  if (!pootjes_ok) {
-    move_stop();
-    delay(20);
-
-    if (get_infrared_left()) {
-      linker_muur_gezien = 0;
-    }
-
-    if (get_infrared_left() && get_infrared_right()) {
-      move_stop();
-      delay(100);
-      move_backward();
-      delay(300);
-      turn_left();
-      delay(600);
-    }
-    else if (get_infrared_left() || get_infrared_mid()) {
-      move_stop();
-      delay(100);
-      // kat_backward();
-      // delay(300);
-      turn_right();
-      delay(300);
-    }
-    else if (get_infrared_right()) {
-      move_stop();
-      delay(100);
-      move_backward();
-      delay(300);
-
-      if (linker_muur_gezien < 20) {
-        linker_muur_gezien = 0;
-        turn_right();
-        delay(300);
-      } else {
-        turn_left();
-        delay(300);
-      }
-    }
-    else {
-      turn_distance_sensor_to(servo_distance_sensor, 0);
-    }
-
-    move_stop();
-  }  
-
-  delay(10);
-  linker_muur_gezien += 1;
-
+  delay(1000);
 }
