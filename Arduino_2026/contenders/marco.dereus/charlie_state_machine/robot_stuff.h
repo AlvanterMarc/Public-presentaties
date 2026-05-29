@@ -2,8 +2,8 @@
 
 #define DEBUG  true
 
-#define MAX_SPEED  210
-#define MIN_SPEED  140
+#define MAX_SPEED  200
+#define MIN_SPEED  150
 
 // Constants uit de voorbeeld libraries.
 
